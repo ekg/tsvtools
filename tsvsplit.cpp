@@ -11,13 +11,21 @@ using namespace std;
 int main(int argc, char** argv) {
 
     if (argc == 1) {
-        cerr << "usage: " << argv[0] << " FIELD1 FIELD2 FIELD3 ..." << endl
-             << "splits out the fields from the input tab-separated value stream" << endl;
+        cerr << "usage: " << argv[0] << " [-v] FIELD1 FIELD2 FIELD3 ..." << endl
+             << "splits out the fields from the input tab-separated value stream"
+             << "specifying '-v' inverts the split, excluding the listed fields" << endl;
         exit(1);
     }
 
+    int i = 1;
+    bool invert = false;
+    if (string(argv[i]) == "-v") {
+        invert = true;
+        i = 2;
+    }
+
     vector<string> fieldnames;
-    for (int i = 1; i < argc; ++i) {
+    for (; i < argc; ++i) {
         fieldnames.push_back(argv[i]);
     }
 
@@ -30,6 +38,20 @@ int main(int argc, char** argv) {
 
     vector<string> header_fields;
     split(header, '\t', header_fields);
+
+    // if we are inverting the selection, invert the list of fieldnames
+    if (invert) {
+        map<string, bool> fieldnamesToRemove;
+        for (vector<string>::iterator f = fieldnames.begin(); f != fieldnames.end(); ++f) {
+            fieldnamesToRemove[*f] = true;
+        }
+        fieldnames.clear();
+        for (vector<string>::iterator h = header_fields.begin(); h != header_fields.end(); ++h) {
+            if (fieldnamesToRemove.find(*h) == fieldnamesToRemove.end()) {
+                fieldnames.push_back(*h);
+            }
+        }
+    }
 
     vector<int> columns;
 
